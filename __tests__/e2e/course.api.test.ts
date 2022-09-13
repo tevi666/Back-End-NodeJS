@@ -1,4 +1,6 @@
 import request from 'supertest';
+import { CourseCreateModel } from '../../src/models/CourseCreateModel';
+import { CourseUpdateModel } from '../../src/models/CourseUpdateModel';
 import { app, HTTP_STATUSES } from '../../src/server';
 describe('/course', () => {
     beforeAll(async() => {
@@ -17,9 +19,10 @@ describe('/course', () => {
     })
 
     it(`should'nt create course with incorrect input data`, async() => {
+        const data: CourseCreateModel = { title: '' };
         await request(app)
         .post('/courses')
-        .send({title: ''})
+        .send(data)
         .expect(HTTP_STATUSES.BAD_REQUEST_400)
 
         await request(app)
@@ -28,9 +31,10 @@ describe('/course', () => {
     })
     let crtCrs: any = null
     it(`should create course with correct input data`, async() => {
+        const data: CourseCreateModel = { title: 'new course' };
         const res = await request(app)
         .post('/courses')
-        .send({title: 'new course'})
+        .send(data)
         .expect(HTTP_STATUSES.CREATED_201)
 
         crtCrs = res.body;
@@ -44,24 +48,27 @@ describe('/course', () => {
     })
     let crtCrs2: any = null
     it(`create one more course`, async() => {
+        const data: CourseCreateModel = { title: 'new course 2' };
+
         const res = await request(app)
         .post('/courses')
-        .send({title: 'new course 2'})
+        .send(data)
         .expect(HTTP_STATUSES.CREATED_201)
 
         crtCrs2 = res.body;
         expect(crtCrs2).toEqual({
             id: expect.any(Number),
-            title: 'new course 2'
+            title: data.title
         })
         await request(app)
             .get('/courses')
             .expect(HTTP_STATUSES.OK_200, [crtCrs, crtCrs2])
     })
     it(`should'nt update course with incorrect input data`, async() => {
+        const data: CourseCreateModel = { title: '' };
         await request(app)
         .put(`/courses/` + crtCrs.id)
-        .send({title: ''})
+        .send(data)
         .expect(HTTP_STATUSES.BAD_REQUEST_400)
 
         await request(app)
@@ -75,15 +82,17 @@ describe('/course', () => {
         .expect(HTTP_STATUSES.NOT_FOUND_404)
     })
     it(`should update course with correct input data`, async() => {
+        const data: CourseUpdateModel = { title: 'good new title' };
+
         await request(app)
         .put(`/courses/` + crtCrs.id)
-        .send({title: 'good new title'})
+        .send(data)
         .expect(HTTP_STATUSES.NO_CONTENT_204)
 
         await request(app)
             .get('/courses/' + crtCrs.id)
             .expect(HTTP_STATUSES.OK_200, {...crtCrs,
-            title: 'good new title'
+            title: data.title
             })
 
         await request(app)
